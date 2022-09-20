@@ -12,6 +12,9 @@ from lighting import Lighting
 from bound import Bound
 from resize import Resize
 
+"""
+从实现上看，不管是训练还是测试阶段，预处理器都进行了固定大小缩放操作，保证同一批图片都是相同大小的
+"""
 
 
 class Empty(object):

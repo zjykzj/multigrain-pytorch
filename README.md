@@ -15,6 +15,15 @@
   <a href="http://commitizen.github.io/cz-cli/"><img src="https://img.shields.io/badge/commitizen-friendly-brightgreen.svg" alt=""></a>
 </p>
 
+实现逻辑：
+
+1. 先完成分类任务训练
+2. 然后扩展到分类+检索任务联合训练
+
+如果仅仅进行分类任务训练，那么它是简单的。包括模型（ResNet50）、损失函数（CrossEntropyLoss）、优化器（SGD）的格式 和之前的方式差别不大
+
+如果是加入检索任务训练，那么需要在数据采样、模型输出、损失函数计算、优化器更新上均进行了变化
+
 ## Table of Contents
 
 - [Table of Contents](#table-of-contents)

@@ -10,6 +10,23 @@ import numpy as np
 from torch.utils.data.dataloader import default_collate
 from collections.abc import Mapping, Sequence
 
+"""
+采样器仅执行采样操作
+
+RA的目的在于扩充采样数据，通过重复采样的方式来提高采样数量
+
+有两个关键参数
+
+1. repetition： 单张图片扩充的次数（注意：扩充的图片是连续输出的，也就是说，单批次图片中会出现重复图片）
+2. len_factor：扩充因子，针对整个数据集的扩充倍数（注意：基于扩充因子得到的单轮数据集长度是一致的，而repetition的使用会导致某些图片在该轮训练中并未得到使用）
+
+另外还包括常规的操作：
+
+1. batch_size： 单批次大小
+2. shuffle：是否打乱训练
+3. drop_last： 是否舍弃最后不满足batch_size长度的图片列表
+"""
+
 
 class RASampler(torch.utils.data.Sampler):
     """

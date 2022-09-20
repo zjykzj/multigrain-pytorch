@@ -14,7 +14,22 @@
 
 先不管白化操作，替换掉池化层，使用GeM池化
 
+先创建自定义的分类模型，然后加入到MultiGrain架构
+
+返回两部分内容：
+
+1. 特征向量
+2. 分类输出
+
 """
 
+import torch
 
-def build_model():
+from .multigrain import MultiGrain
+
+
+def build_model(args):
+    model = MultiGrain(args.backbone)
+    return model
+
+
