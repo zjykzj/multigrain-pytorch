@@ -13,11 +13,10 @@ from torch import nn
 from torch.nn import Module
 from torchvision.models import resnet
 
-KEY_FEAT = 'feat'
-KEY_OUTPUT = 'output'
+from multigrain.criterion.build import KEY_OUTPUT, KEY_FEAT
 
 
-class MultiGrain(Module):
+class MultiGrainModel(Module):
 
     def __init__(self, backbone, ) -> None:
         super().__init__()
@@ -45,5 +44,5 @@ class MultiGrain(Module):
 
 
 if __name__ == '__main__':
-    model = MultiGrain('resnet50')
+    model = MultiGrainModel('resnet50')
     print(model)

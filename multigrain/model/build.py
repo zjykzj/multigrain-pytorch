@@ -25,11 +25,10 @@
 
 import torch
 
-from .multigrain import MultiGrain
-
+from multigrain_module import MultiGrainModel
 
 def build_model(args):
-    model = MultiGrain(args.backbone)
+    model = MultiGrainModel(args.backbone)
     return model
 
 

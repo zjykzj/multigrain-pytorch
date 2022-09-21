@@ -11,13 +11,17 @@ import torch
 
 from .margin import MarginLoss
 
+KEY_OUTPUT = 'output'
+KEY_TARGET = 'target'
+KEY_FEAT = 'feat'
+
 
 def build_criterion(args):
-    cross_entropy = torch.nn.CrossEntropyLoss()
+    """
+    对于分类任务而言，使用CrossEntropyLoss
+    :param args:
+    :return:
+    """
+    cross_entropy_loss = torch.nn.CrossEntropyLoss()
 
-    margin = MarginLoss(args.beta_init)
-
-    # 创建组合损失函数
-    criterion = MultiCriterion(dict(cross_entropy=cross_entropy_criterion, margin=margin_criterion),
-                               skip_zeros=(args.repeated_augmentations == 1))
-    return criterion
+    return cross_entropy_loss

@@ -109,3 +109,11 @@ def list_collate(batch):
         transposed = zip(*batch)
         return [list_collate(samples) for samples in transposed]
     return default_collate(batch)
+
+
+if __name__ == '__main__':
+    sampler = RASampler(30, repetitions=3, shuffle=True, batch_size=10, len_factor=2)
+    print(len(sampler))
+
+    for idxs in sampler:
+        print(idxs)

@@ -24,6 +24,11 @@
 
 如果是加入检索任务训练，那么需要在数据采样、模型输出、损失函数计算、优化器更新上均进行了变化
 
+先进行分类任务训练，基于ImageNet数据集，使用MultiGrain提供的预处理器、模型、损失函数以及优化器
+
+然后加入检索任务训练
+
+
 ## Table of Contents
 
 - [Table of Contents](#table-of-contents)
