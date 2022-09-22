@@ -40,8 +40,12 @@
 cd multigrain
 export PYTHONPATH=.
 
-python3 train.py --model resnet50 --lr 1e-2 --data-path /data/sdf/imagenet/ --output-dir ./outputs --ra-reps 1 --batch-size 128 --epochs 120
-torchrun --nproc_per_node=8 train.py --model resnet50 --lr 1e-2 --data-path /data/sdf/imagenet/ --output-dir ./outputs --ra-reps 1 --batch-size 128 --epochs 120
+python3 train.py --model resnet50 --lr 1e-2 --data-path /data/imagenet/ --output-dir ./outputs --ra-reps 1 --batch-size 128 --epochs 120
+torchrun --nproc_per_node=8 train.py --model resnet50 --lr 1e-2 --data-path /data/imagenet/ --output-dir ./outputs --ra-reps 1 --batch-size 128 --epochs 120
+```
+
+```shell
+torchrun --nproc_per_node=8 train.py --model resnet50 --lr 0.2 --data-path /data/imagenet/ --output-dir ./outputs --batch-size 256 --epochs 120 --classify-weight 0.5 --pooling-exponent 3 --ra-reps 3 --amp --lr-warmup-epochs 5 --lr-warmup-method linear
 ```
 
 ## Maintainers
