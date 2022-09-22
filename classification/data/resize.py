@@ -7,6 +7,7 @@
 @description: 
 """
 
+import torchvision.transforms.functional as F
 from torchvision import transforms
 
 

@@ -31,8 +31,8 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, arg
         start_time = time.time()
         image, target = image.to(device), target.to(device)
         with torch.cuda.amp.autocast(enabled=scaler is not None):
-            output = model(image)
-            loss = criterion(output, target)
+            output = model(image, target)
+            loss, classify_loss, retrieval_loss = criterion(output, target)
 
         optimizer.zero_grad()
         if scaler is not None:
@@ -57,7 +57,9 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, arg
 
         acc1, acc5 = utils.accuracy(output[KEY_OUTPUT], target, topk=(1, 5))
         batch_size = image.shape[0]
-        metric_logger.update(loss=loss.item(), lr=optimizer.param_groups[0]["lr"])
+        metric_logger.update(loss=loss.item(), classify_loss=classify_loss.item(), retrieval_loss=retrieval_loss.item(),
+                             lr=optimizer.param_groups[0]["lr"])
+        # metric_logger.update(loss=loss.item(), lr=optimizer.param_groups[0]["lr"])
         metric_logger.meters["acc1"].update(acc1.item(), n=batch_size)
         metric_logger.meters["acc5"].update(acc5.item(), n=batch_size)
         metric_logger.meters["img/s"].update(batch_size / (time.time() - start_time))
@@ -73,14 +75,17 @@ def evaluate(model, criterion, data_loader, device, print_freq=100, log_suffix="
         for image, target in metric_logger.log_every(data_loader, print_freq, header):
             image = image.to(device, non_blocking=True)
             target = target.to(device, non_blocking=True)
-            output = model(image)
-            loss = criterion(output, target)
+            output = model(image, target)
+            # loss = criterion(output, target)
+            loss, classify_loss, retrieval_loss = criterion(output, target)
 
             acc1, acc5 = utils.accuracy(output[KEY_OUTPUT], target, topk=(1, 5))
             # FIXME need to take into account that the datasets
             # could have been padded in distributed setup
             batch_size = image.shape[0]
-            metric_logger.update(loss=loss.item())
+            metric_logger.update(loss=loss.item(), classify_loss=classify_loss.item(),
+                                 retrieval_loss=retrieval_loss.item())
+            # metric_logger.update(loss=loss.item())
             metric_logger.meters["acc1"].update(acc1.item(), n=batch_size)
             metric_logger.meters["acc5"].update(acc5.item(), n=batch_size)
             num_processed_samples += batch_size
@@ -361,9 +366,10 @@ def main(args):
             train_sampler.set_epoch(epoch)
         train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, args, model_ema, scaler)
         lr_scheduler.step()
-        evaluate(model, criterion, data_loader_test, device=device)
+        evaluate(model, criterion, data_loader_test, print_freq=args.print_freq, device=device)
         if model_ema:
-            evaluate(model_ema, criterion, data_loader_test, device=device, log_suffix="EMA")
+            evaluate(model_ema, criterion, data_loader_test, print_freq=args.print_freq, device=device,
+                     log_suffix="EMA")
         if args.output_dir:
             checkpoint = {
                 "model": model_without_ddp.state_dict(),
@@ -510,6 +516,9 @@ def get_args_parser(add_help=True):
         "--ra-reps", default=3, type=int, help="number of repetitions for Repeated Augmentation (default: 3)"
     )
     parser.add_argument("--weights", default=None, type=str, help="the weights enum name to load")
+
+    # For MultiGrain
+    parser.add_argument('--beta-init', default=1.2, type=float, help='initial value for beta in margin loss')
 
     return parser
 

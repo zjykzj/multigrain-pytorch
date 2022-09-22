@@ -9,11 +9,22 @@
 
 from collections import OrderedDict
 
+import torch
 from torch import nn
 from torch.nn import Module
 from torchvision.models import resnet
 
 from criterion.build import KEY_OUTPUT, KEY_FEAT
+from criterion.build import KEY_ANCHOR, KEY_POSITIVE, KEY_NEGATIVE
+from .distance_weighted_sampler import DistanceWeightedSampling
+
+
+def l2n(x, eps=1e-6, dim=1):
+    """
+    基于指定维度计算L2范数，执行归一化操作
+    """
+    x = x / (torch.norm(x, p=2, dim=dim, keepdim=True) + eps).expand_as(x)
+    return x
 
 
 class MultiGrain(Module):
@@ -31,17 +42,24 @@ class MultiGrain(Module):
         else:
             raise ValueError(f'{backbone} does not supports')
 
-    def forward(self, x):
+        self.normalize = l2n
+        self.weighted_sampling = DistanceWeightedSampling()
+
+    def forward(self, x, target):
         features = self.features(x)
         embedding = self.pool(features)
         embedding = embedding.view(embedding.size(0), -1)
-
         classifier_output = self.classifier(embedding)
 
-        return {
-            KEY_FEAT: embedding,
+        normalized_embedding = self.normalize(embedding)
+        res_dict = {
+            KEY_FEAT: normalized_embedding,
             KEY_OUTPUT: classifier_output
         }
+
+        weighted_embedding_dict = self.weighted_sampling(normalized_embedding, target)
+        res_dict.update(weighted_embedding_dict)
+        return res_dict
 
 
 if __name__ == '__main__':

@@ -60,10 +60,17 @@ def build_transform(input_size, eig_val=None, eig_vec=None, mean=None, std=None)
         Empty() if mean is None or std is None else transforms.Normalize(mean, std),
     ])
 
+    # val_transform = transforms.Compose([
+    #     Resize(input_size, largest=True),  # to maintain same ratio w.r.t. 224 images
+    #     transforms.ToTensor(),
+    #     Empty() if mean is None or std is None else transforms.Normalize(mean, std),
+    # ])
+
     val_transform = transforms.Compose([
-        Resize(input_size, largest=True),  # to maintain same ratio w.r.t. 224 images
+        Resize(int((256 / 224) * input_size)),  # to maintain same ratio w.r.t. 224 images
+        transforms.CenterCrop(input_size),
         transforms.ToTensor(),
-        Empty() if mean is None or std is None else transforms.Normalize(mean, std),
+        transforms.Normalize(mean, std)
     ])
 
     return train_transform, val_transform

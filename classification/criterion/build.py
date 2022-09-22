@@ -15,7 +15,13 @@ KEY_OUTPUT = 'output'
 KEY_TARGET = 'target'
 KEY_FEAT = 'feat'
 
+KEY_ANCHOR = 'anchor'
+KEY_POSITIVE = 'positive'
+KEY_NEGATIVE = 'negative'
+
 from .cross_entropy_loss import CrossEntropyLoss
+from .margin_loss import MarginLoss
+from .multi_criterion import MultiCriterion
 
 
 def build_criterion(args):
@@ -25,5 +31,8 @@ def build_criterion(args):
     :return:
     """
     cross_entropy_loss = CrossEntropyLoss(label_smoothing=args.label_smoothing)
+    margin_loss = MarginLoss(beta_init=args.beta_init)
 
-    return cross_entropy_loss
+    multi_criterion = MultiCriterion(classify_loss=cross_entropy_loss, retrieval_loss=margin_loss)
+
+    return multi_criterion
