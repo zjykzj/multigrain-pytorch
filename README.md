@@ -28,6 +28,14 @@
 
 然后加入检索任务训练
 
+```shell
+cd classification
+
+export PYTHONPATH=.
+
+python3 train.py --model resnet50 --lr 1e-2 --data-path /data/sdf/imagenet/ --output-dir ./outputs --ra-reps 1 --batch-size 128 --epochs 120
+torchrun --nproc_per_node=8 train.py --model resnet50 --lr 1e-2 --data-path /data/sdf/imagenet/ --output-dir ./outputs --ra-reps 1 --batch-size 128 --epochs 120
+```
 
 ## Table of Contents
 
