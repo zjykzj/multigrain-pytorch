@@ -256,7 +256,7 @@ def main(args):
 
     print("Creating model")
     # model = torchvision.models.get_model(args.model, weights=args.weights, num_classes=num_classes)
-    model = build_model(backbone=args.model)
+    model = build_model(args)
     model.to(device)
 
     if args.distributed and args.sync_bn:
