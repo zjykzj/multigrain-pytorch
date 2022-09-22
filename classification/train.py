@@ -18,12 +18,17 @@ from criterion.build import build_criterion, KEY_OUTPUT
 from data.build import build_transform
 from data.dataset.build import build_dataset
 from model.build import build_model
+from optim.build import build_optim, build_lr_scheduler
 
 
-def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, args, model_ema=None, scaler=None):
+# def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, args, model_ema=None, scaler=None):
+def train_one_epoch(model, criterion, classify_optimizer, retrieval_optimizer,
+                    data_loader, device, epoch, args, model_ema=None, scaler=None):
     model.train()
     metric_logger = utils.MetricLogger(delimiter="  ")
-    metric_logger.add_meter("lr", utils.SmoothedValue(window_size=1, fmt="{value}"))
+    # metric_logger.add_meter("lr", utils.SmoothedValue(window_size=1, fmt="{value}"))
+    metric_logger.add_meter("classify_lr", utils.SmoothedValue(window_size=1, fmt="{value}"))
+    metric_logger.add_meter("retrieval_lr", utils.SmoothedValue(window_size=1, fmt="{value}"))
     metric_logger.add_meter("img/s", utils.SmoothedValue(window_size=10, fmt="{value}"))
 
     header = f"Epoch: [{epoch}]"
@@ -34,20 +39,28 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, arg
             output = model(image, target)
             loss, classify_loss, retrieval_loss = criterion(output, target)
 
-        optimizer.zero_grad()
+        # optimizer.zero_grad()
+        classify_optimizer.zero_grad()
+        retrieval_optimizer.zero_grad()
         if scaler is not None:
             scaler.scale(loss).backward()
             if args.clip_grad_norm is not None:
                 # we should unscale the gradients of optimizer's assigned params if do gradient clipping
-                scaler.unscale_(optimizer)
+                # scaler.unscale_(optimizer)
+                scaler.unscale_(classify_optimizer)
+                scaler.unscale_(retrieval_optimizer)
                 nn.utils.clip_grad_norm_(model.parameters(), args.clip_grad_norm)
-            scaler.step(optimizer)
+            # scaler.step(optimizer)
+            scaler.step(classify_optimizer)
+            scaler.step(retrieval_optimizer)
             scaler.update()
         else:
             loss.backward()
             if args.clip_grad_norm is not None:
                 nn.utils.clip_grad_norm_(model.parameters(), args.clip_grad_norm)
-            optimizer.step()
+            # optimizer.step()
+            classify_optimizer.step()
+            retrieval_optimizer.step()
 
         if model_ema and i % args.model_ema_steps == 0:
             model_ema.update_parameters(model)
@@ -58,7 +71,9 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, arg
         acc1, acc5 = utils.accuracy(output[KEY_OUTPUT], target, topk=(1, 5))
         batch_size = image.shape[0]
         metric_logger.update(loss=loss.item(), classify_loss=classify_loss.item(), retrieval_loss=retrieval_loss.item(),
-                             lr=optimizer.param_groups[0]["lr"])
+                             # lr=optimizer.param_groups[0]["lr"])
+                             classify_lr=classify_optimizer.param_groups[0]["lr"],
+                             retrieval_lr=retrieval_optimizer.param_groups[0]["lr"])
         # metric_logger.update(loss=loss.item(), lr=optimizer.param_groups[0]["lr"])
         metric_logger.meters["acc1"].update(acc1.item(), n=batch_size)
         metric_logger.meters["acc5"].update(acc5.item(), n=batch_size)
@@ -250,7 +265,7 @@ def main(args):
 
     # criterion = nn.CrossEntropyLoss(label_smoothing=args.label_smoothing)
     print('Creating criterion')
-    criterion = build_criterion(args)
+    criterion, retrieval_loss = build_criterion(args)
 
     custom_keys_weight_decay = []
     if args.bias_weight_decay is not None:
@@ -266,58 +281,28 @@ def main(args):
     )
 
     opt_name = args.opt.lower()
-    if opt_name.startswith("sgd"):
-        optimizer = torch.optim.SGD(
-            parameters,
-            lr=args.lr,
-            momentum=args.momentum,
-            weight_decay=args.weight_decay,
-            nesterov="nesterov" in opt_name,
-        )
-    elif opt_name == "rmsprop":
-        optimizer = torch.optim.RMSprop(
-            parameters, lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay, eps=0.0316, alpha=0.9
-        )
-    elif opt_name == "adamw":
-        optimizer = torch.optim.AdamW(parameters, lr=args.lr, weight_decay=args.weight_decay)
-    else:
-        raise RuntimeError(f"Invalid optimizer {args.opt}. Only SGD, RMSprop and AdamW are supported.")
+    # if opt_name.startswith("sgd"):
+    #     optimizer = torch.optim.SGD(
+    #         parameters,
+    #         lr=args.lr,
+    #         momentum=args.momentum,
+    #         weight_decay=args.weight_decay,
+    #         nesterov="nesterov" in opt_name,
+    #     )
+    # elif opt_name == "rmsprop":
+    #     optimizer = torch.optim.RMSprop(
+    #         parameters, lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay, eps=0.0316, alpha=0.9
+    #     )
+    # elif opt_name == "adamw":
+    #     optimizer = torch.optim.AdamW(parameters, lr=args.lr, weight_decay=args.weight_decay)
+    # else:
+    #     raise RuntimeError(f"Invalid optimizer {args.opt}. Only SGD, RMSprop and AdamW are supported.")
+    classify_optimizer, retrieval_optimizer = build_optim(args, parameters, retrieval_loss)
 
     scaler = torch.cuda.amp.GradScaler() if args.amp else None
 
-    args.lr_scheduler = args.lr_scheduler.lower()
-    if args.lr_scheduler == "steplr":
-        main_lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=args.lr_step_size, gamma=args.lr_gamma)
-    elif args.lr_scheduler == "cosineannealinglr":
-        main_lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-            optimizer, T_max=args.epochs - args.lr_warmup_epochs, eta_min=args.lr_min
-        )
-    elif args.lr_scheduler == "exponentiallr":
-        main_lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=args.lr_gamma)
-    else:
-        raise RuntimeError(
-            f"Invalid lr scheduler '{args.lr_scheduler}'. Only StepLR, CosineAnnealingLR and ExponentialLR "
-            "are supported."
-        )
-
-    if args.lr_warmup_epochs > 0:
-        if args.lr_warmup_method == "linear":
-            warmup_lr_scheduler = torch.optim.lr_scheduler.LinearLR(
-                optimizer, start_factor=args.lr_warmup_decay, total_iters=args.lr_warmup_epochs
-            )
-        elif args.lr_warmup_method == "constant":
-            warmup_lr_scheduler = torch.optim.lr_scheduler.ConstantLR(
-                optimizer, factor=args.lr_warmup_decay, total_iters=args.lr_warmup_epochs
-            )
-        else:
-            raise RuntimeError(
-                f"Invalid warmup lr method '{args.lr_warmup_method}'. Only linear and constant are supported."
-            )
-        lr_scheduler = torch.optim.lr_scheduler.SequentialLR(
-            optimizer, schedulers=[warmup_lr_scheduler, main_lr_scheduler], milestones=[args.lr_warmup_epochs]
-        )
-    else:
-        lr_scheduler = main_lr_scheduler
+    classify_lr_scheduler = build_lr_scheduler(args, classify_optimizer)
+    retrieval_lr_scheduler = build_lr_scheduler(args, retrieval_optimizer)
 
     model_without_ddp = model
     if args.distributed:
@@ -341,8 +326,13 @@ def main(args):
         checkpoint = torch.load(args.resume, map_location="cpu")
         model_without_ddp.load_state_dict(checkpoint["model"])
         if not args.test_only:
-            optimizer.load_state_dict(checkpoint["optimizer"])
-            lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
+            classify_optimizer.load_state_dict(checkpoint["classify_optimizer"])
+            retrieval_optimizer.load_state_dict(checkpoint["retrieval_optimizer"])
+            classify_lr_scheduler.load_state_dict(checkpoint["classify_lr_scheduler"])
+            retrieval_lr_scheduler.load_state_dict(checkpoint["retrieval_lr_scheduler"])
+
+            # optimizer.load_state_dict(checkpoint["optimizer"])
+            # lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
         args.start_epoch = checkpoint["epoch"] + 1
         if model_ema:
             model_ema.load_state_dict(checkpoint["model_ema"])
@@ -364,8 +354,12 @@ def main(args):
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
-        train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, args, model_ema, scaler)
-        lr_scheduler.step()
+        # train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, args, model_ema, scaler)
+        train_one_epoch(model, criterion, classify_optimizer, retrieval_optimizer,
+                        data_loader, device, epoch, args, model_ema, scaler)
+        # lr_scheduler.step()
+        classify_lr_scheduler.step()
+        retrieval_lr_scheduler.step()
         evaluate(model, criterion, data_loader_test, print_freq=args.print_freq, device=device)
         if model_ema:
             evaluate(model_ema, criterion, data_loader_test, print_freq=args.print_freq, device=device,
@@ -373,8 +367,12 @@ def main(args):
         if args.output_dir:
             checkpoint = {
                 "model": model_without_ddp.state_dict(),
-                "optimizer": optimizer.state_dict(),
-                "lr_scheduler": lr_scheduler.state_dict(),
+                # "optimizer": optimizer.state_dict(),
+                # "lr_scheduler": lr_scheduler.state_dict(),
+                "classify_optimizer": classify_optimizer.state_dict(),
+                "retrieval_optimizer": retrieval_optimizer.state_dict(),
+                "classify_lr_scheduler": classify_lr_scheduler.state_dict(),
+                "retrieval_lr_scheduler": retrieval_lr_scheduler.state_dict(),
                 "epoch": epoch,
                 "args": args,
             }
@@ -519,6 +517,8 @@ def get_args_parser(add_help=True):
 
     # For MultiGrain
     parser.add_argument('--beta-init', default=1.2, type=float, help='initial value for beta in margin loss')
+    parser.add_argument('--beta-lr', default=1.0, type=float,
+                        help='learning rate for beta (relative to base learning rate)')
 
     return parser
 
