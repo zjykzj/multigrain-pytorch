@@ -51,6 +51,7 @@ torchrun --nproc_per_node=8 train.py --model resnet50 --lr 1e-2 --data-path /dat
 ## Thanks
 
 * [facebookresearch/multigrain](https://github.com/facebookresearch/multigrain)
+* [pytorch/vision](https://github.com/pytorch/vision)
 
 ```text
 @ARTICLE{2019arXivMultiGrain,
