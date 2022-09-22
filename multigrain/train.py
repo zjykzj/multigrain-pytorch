@@ -265,6 +265,7 @@ def main(args):
     # criterion = nn.CrossEntropyLoss(label_smoothing=args.label_smoothing)
     print('Creating criterion')
     criterion, retrieval_loss = build_criterion(args)
+    criterion = criterion.to(device)
 
     custom_keys_weight_decay = []
     if args.bias_weight_decay is not None:
@@ -279,7 +280,7 @@ def main(args):
         custom_keys_weight_decay=custom_keys_weight_decay if len(custom_keys_weight_decay) > 0 else None,
     )
 
-    opt_name = args.opt.lower()
+    # opt_name = args.opt.lower()
     # if opt_name.startswith("sgd"):
     #     optimizer = torch.optim.SGD(
     #         parameters,
