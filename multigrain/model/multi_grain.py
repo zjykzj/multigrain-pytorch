@@ -16,7 +16,9 @@ from torchvision.models import resnet
 
 from criterion.build import KEY_OUTPUT, KEY_FEAT
 from criterion.build import KEY_ANCHOR, KEY_POSITIVE, KEY_NEGATIVE
+
 from .distance_weighted_sampler import DistanceWeightedSampling
+from .gem import GeM
 
 
 def l2n(x, eps=1e-6, dim=1):
@@ -29,7 +31,7 @@ def l2n(x, eps=1e-6, dim=1):
 
 class MultiGrain(Module):
 
-    def __init__(self, backbone, ) -> None:
+    def __init__(self, backbone, p=3.0) -> None:
         super().__init__()
 
         if backbone == 'resnet50':
@@ -42,6 +44,7 @@ class MultiGrain(Module):
         else:
             raise ValueError(f'{backbone} does not supports')
 
+        self.pool = GeM(p=p)
         self.normalize = l2n
         self.weighted_sampling = DistanceWeightedSampling()
 

@@ -28,6 +28,7 @@ import torch
 from .multi_grain import MultiGrain
 
 
-def build_model(backbone='resnet50'):
-    model = MultiGrain(backbone)
+def build_model(args):
+    model = MultiGrain(args.backbone, p=args.pooling_exponent)
+
     return model

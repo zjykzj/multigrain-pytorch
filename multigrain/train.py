@@ -521,6 +521,7 @@ def get_args_parser(add_help=True):
                         help='learning rate for beta (relative to base learning rate)')
     parser.add_argument('--classify-weight', default=1.0, type=utils.arguments.float_in_range(0, 1),
                         help='weighting parameter for the loss, between 0 (only margin) and 1 (only cross-entropy)')
+    parser.add_argument('--pooling-exponent', default=1.0, type=float, help='exponent in GeM pooling')
 
     return parser
 
