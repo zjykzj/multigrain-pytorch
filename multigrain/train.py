@@ -519,6 +519,8 @@ def get_args_parser(add_help=True):
     parser.add_argument('--beta-init', default=1.2, type=float, help='initial value for beta in margin loss')
     parser.add_argument('--beta-lr', default=1.0, type=float,
                         help='learning rate for beta (relative to base learning rate)')
+    parser.add_argument('--classify-weight', default=1.0, type=utils.arguments.float_in_range(0, 1),
+                        help='weighting parameter for the loss, between 0 (only margin) and 1 (only cross-entropy)')
 
     return parser
 
