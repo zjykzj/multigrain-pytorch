@@ -37,7 +37,7 @@
 ## Usage
 
 ```shell
-cd classification
+cd multigrain
 export PYTHONPATH=.
 
 python3 train.py --model resnet50 --lr 1e-2 --data-path /data/sdf/imagenet/ --output-dir ./outputs --ra-reps 1 --batch-size 128 --epochs 120

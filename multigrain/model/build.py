@@ -25,10 +25,9 @@
 
 import torch
 
-from multigrain_module import MultiGrainModel
+from .multi_grain import MultiGrain
 
-def build_model(args):
-    model = MultiGrainModel(args.backbone)
+
+def build_model(backbone='resnet50'):
+    model = MultiGrain(backbone)
     return model
-
-

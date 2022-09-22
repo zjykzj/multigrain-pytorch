@@ -18,9 +18,12 @@ from .build import KEY_OUTPUT, KEY_FEAT
 
 class CrossEntropyLoss(nn.Module):
 
-    def __init__(self):
+    def __init__(self, label_smoothing=None):
         super(CrossEntropyLoss, self).__init__()
-        self.loss = nn.CrossEntropyLoss(reduction='mean')
+        if label_smoothing is None or label_smoothing == 0.0:
+            self.loss = nn.CrossEntropyLoss(reduction='mean')
+        else:
+            self.loss = nn.CrossEntropyLoss(reduction='mean', label_smoothing=label_smoothing)
 
     def forward(self, input_dict: Dict, targets):
         assert KEY_OUTPUT in input_dict.keys()

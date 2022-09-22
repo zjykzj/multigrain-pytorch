@@ -6,7 +6,7 @@
 @author: zj
 @description: 
 """
-from typing import Any
+from typing import Any, Tuple
 
 import numpy as np
 
@@ -18,12 +18,9 @@ class ImageNet(imagenet.ImageNet):
     def __init__(self, root: str, split: str = "train", **kwargs: Any) -> None:
         super().__init__(root, split, **kwargs)
 
-    def parse_archives(self) -> None:
-        super().parse_archives()
+    def __getitem__(self, index: int) -> Tuple[Any, Any]:
+        return super().__getitem__(index)
 
-    @property
-    def split_folder(self) -> str:
-        return super().split_folder()
+    def __len__(self) -> int:
+        return super().__len__()
 
-    def extra_repr(self) -> str:
-        return super().extra_repr()
