@@ -15,28 +15,6 @@
   <a href="http://commitizen.github.io/cz-cli/"><img src="https://img.shields.io/badge/commitizen-friendly-brightgreen.svg" alt=""></a>
 </p>
 
-实现逻辑：
-
-1. 先完成分类任务训练
-2. 然后扩展到分类+检索任务联合训练
-
-如果仅仅进行分类任务训练，那么它是简单的。包括模型（ResNet50）、损失函数（CrossEntropyLoss）、优化器（SGD）的格式 和之前的方式差别不大
-
-如果是加入检索任务训练，那么需要在数据采样、模型输出、损失函数计算、优化器更新上均进行了变化
-
-先进行分类任务训练，基于ImageNet数据集，使用MultiGrain提供的预处理器、模型、损失函数以及优化器
-
-然后加入检索任务训练
-
-```shell
-cd classification
-
-export PYTHONPATH=.
-
-python3 train.py --model resnet50 --lr 1e-2 --data-path /data/sdf/imagenet/ --output-dir ./outputs --ra-reps 1 --batch-size 128 --epochs 120
-torchrun --nproc_per_node=8 train.py --model resnet50 --lr 1e-2 --data-path /data/sdf/imagenet/ --output-dir ./outputs --ra-reps 1 --batch-size 128 --epochs 120
-```
-
 ## Table of Contents
 
 - [Table of Contents](#table-of-contents)
@@ -58,7 +36,13 @@ torchrun --nproc_per_node=8 train.py --model resnet50 --lr 1e-2 --data-path /dat
 
 ## Usage
 
-...
+```shell
+cd classification
+export PYTHONPATH=.
+
+python3 train.py --model resnet50 --lr 1e-2 --data-path /data/sdf/imagenet/ --output-dir ./outputs --ra-reps 1 --batch-size 128 --epochs 120
+torchrun --nproc_per_node=8 train.py --model resnet50 --lr 1e-2 --data-path /data/sdf/imagenet/ --output-dir ./outputs --ra-reps 1 --batch-size 128 --epochs 120
+```
 
 ## Maintainers
 
