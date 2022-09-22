@@ -11,6 +11,20 @@ import torch
 import torch.distributed as dist
 
 
+def float_in_range(begin, end):
+    """
+    装饰器：判断输入数值是否符合要求
+    """
+
+    def parser(inp):
+        inp = float(inp)
+        if not begin <= inp <= end:
+            raise argparse.ArgumentTypeError('Argument should be between {} and {}'.format(begin, end))
+        return inp
+
+    return parser
+
+
 class SmoothedValue:
     """Track a series of values and provide access to smoothed values over a
     window or the global series average.
@@ -404,11 +418,11 @@ def reduce_across_processes(val):
 
 
 def set_weight_decay(
-    model: torch.nn.Module,
-    weight_decay: float,
-    norm_weight_decay: Optional[float] = None,
-    norm_classes: Optional[List[type]] = None,
-    custom_keys_weight_decay: Optional[List[Tuple[str, float]]] = None,
+        model: torch.nn.Module,
+        weight_decay: float,
+        norm_weight_decay: Optional[float] = None,
+        norm_classes: Optional[List[type]] = None,
+        custom_keys_weight_decay: Optional[List[Tuple[str, float]]] = None,
 ):
     if not norm_classes:
         norm_classes = [

@@ -3,16 +3,15 @@ import os
 import time
 import warnings
 
-import presets
 import torch
 import torch.utils.data
 import torchvision
-import transforms
-import utils
-from data.sampler.sampler import RASampler
 from torch import nn
 from torch.utils.data.dataloader import default_collate
 from torchvision.transforms.functional import InterpolationMode
+
+import utils
+from data.sampler.sampler import RASampler
 
 from criterion.build import build_criterion, KEY_OUTPUT
 from data.transform.build import build_transform
@@ -519,7 +518,7 @@ def get_args_parser(add_help=True):
     parser.add_argument('--beta-init', default=1.2, type=float, help='initial value for beta in margin loss')
     parser.add_argument('--beta-lr', default=1.0, type=float,
                         help='learning rate for beta (relative to base learning rate)')
-    parser.add_argument('--classify-weight', default=1.0, type=utils.arguments.float_in_range(0, 1),
+    parser.add_argument('--classify-weight', default=1.0, type=utils.float_in_range(0, 1),
                         help='weighting parameter for the loss, between 0 (only margin) and 1 (only cross-entropy)')
     parser.add_argument('--pooling-exponent', default=1.0, type=float, help='exponent in GeM pooling')
 
