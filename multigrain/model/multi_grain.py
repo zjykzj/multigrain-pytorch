@@ -40,7 +40,8 @@ class MultiGrain(Module):
         super().__init__()
 
         if backbone == 'resnet50':
-            model = resnet.resnet50(weights=resnet.ResNet50_Weights.IMAGENET1K_V2)
+            # model = resnet.resnet50(weights=resnet.ResNet50_Weights.IMAGENET1K_V2)
+            model = resnet.resnet50()
             children = list(model.named_children())
 
             self.features = nn.Sequential(OrderedDict(children[:-2]))
