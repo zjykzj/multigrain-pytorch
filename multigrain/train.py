@@ -34,9 +34,14 @@ def train_one_epoch(model, criterion, classify_optimizer, retrieval_optimizer,
     for i, (image, target) in enumerate(metric_logger.log_every(data_loader, args.print_freq, header)):
         start_time = time.time()
         image, target = image.to(device), target.to(device)
+        # print("image is_cuda:", image.is_cuda)
+        # print("target is_cuda:", target.is_cuda)
         with torch.cuda.amp.autocast(enabled=scaler is not None):
             output = model(image, target)
             loss, classify_loss, retrieval_loss = criterion(output, target)
+        # print("loss is_cuda:", loss.is_cuda)
+        # print("classify_loss is_cuda:", classify_loss.is_cuda)
+        # print("retrieval_loss is_cuda:", retrieval_loss.is_cuda)
 
         # optimizer.zero_grad()
         classify_optimizer.zero_grad()
@@ -257,7 +262,7 @@ def main(args):
     print("Creating model")
     # model = torchvision.models.get_model(args.model, weights=args.weights, num_classes=num_classes)
     model = build_model(args)
-    model.to(device)
+    model = model.to(device)
 
     if args.distributed and args.sync_bn:
         model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
@@ -266,6 +271,7 @@ def main(args):
     print('Creating criterion')
     criterion, retrieval_loss = build_criterion(args)
     criterion = criterion.to(device)
+    retrieval_loss = retrieval_loss.to(device)
 
     custom_keys_weight_decay = []
     if args.bias_weight_decay is not None:

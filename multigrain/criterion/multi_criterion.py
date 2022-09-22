@@ -20,6 +20,7 @@ class MultiCriterion(nn.Module):
 
         self.classify_loss = classify_loss
         self.retrieval_loss = retrieval_loss
+
         self.classify_weight = classify_weight
 
     def forward(self, input_dict, target):
