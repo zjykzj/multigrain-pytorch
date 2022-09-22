@@ -29,6 +29,6 @@ from .multi_grain import MultiGrain
 
 
 def build_model(args):
-    model = MultiGrain(args.backbone, p=args.pooling_exponent)
+    model = MultiGrain(args.model, p=args.pooling_exponent)
 
     return model
