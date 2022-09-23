@@ -36,6 +36,8 @@
 
 ## Usage
 
+* Base Operation (One GPU)
+
 ```shell
 cd multigrain
 export PYTHONPATH=.
@@ -44,7 +46,7 @@ python3 train.py --model resnet50 --lr 1e-2 --data-path /data/imagenet/ --output
 torchrun --nproc_per_node=8 train.py --model resnet50 --lr 1e-2 --data-path /data/imagenet/ --output-dir ./outputs --ra-reps 1 --batch-size 128 --epochs 120
 ```
 
-使用DistributedSampler
+* Use DistributedSampler (Multi-GPU)
 
 ```shell
 torchrun --nproc_per_node=8 train.py --model resnet50 --lr 0.2 --data-path /data/imagenet/ --output-dir ./outputs --batch-size 256 --epochs 120 --classify-weight 0.5 --pooling-exponent 3 --ra-reps 3 --amp --lr-warmup-epochs 5 --lr-warmup-method linear
@@ -55,7 +57,7 @@ Epoch: [117]
 Acc@1 75.816 Acc@5 92.600
 ```
 
-使用RASampler
+* Use RASampler (Multi-GPU)
 
 ```shell
 torchrun --nproc_per_node=8 train.py --model resnet50 --lr 0.2 --data-path /data/imagenet/ --output-dir ./outputs --batch-size 256 --epochs 120 --classify-weight 0.5 --pooling-exponent 3 --ra-sampler --ra-reps 3 --amp --lr-warmup-epochs 5 --lr-warmup-method linear
