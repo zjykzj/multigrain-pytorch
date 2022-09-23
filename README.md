@@ -41,10 +41,12 @@ cd multigrain
 export PYTHONPATH=.
 ```
 
-* Base Operation (One GPU)
+* Base Operation
 
 ```shell
+# One-GPU
 python3 train.py --model resnet50 --lr 1e-2 --data-path /data/imagenet/ --output-dir ./outputs --ra-reps 1 --batch-size 128 --epochs 120
+# Multi-GPU
 torchrun --nproc_per_node=8 train.py --model resnet50 --lr 1e-2 --data-path /data/imagenet/ --output-dir ./outputs --ra-reps 1 --batch-size 128 --epochs 120
 ```
 
