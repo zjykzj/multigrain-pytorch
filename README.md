@@ -36,12 +36,14 @@
 
 ## Usage
 
-* Base Operation (One GPU)
-
 ```shell
 cd multigrain
 export PYTHONPATH=.
+```
 
+* Base Operation (One GPU)
+
+```shell
 python3 train.py --model resnet50 --lr 1e-2 --data-path /data/imagenet/ --output-dir ./outputs --ra-reps 1 --batch-size 128 --epochs 120
 torchrun --nproc_per_node=8 train.py --model resnet50 --lr 1e-2 --data-path /data/imagenet/ --output-dir ./outputs --ra-reps 1 --batch-size 128 --epochs 120
 ```
@@ -53,8 +55,7 @@ torchrun --nproc_per_node=8 train.py --model resnet50 --lr 0.2 --data-path /data
 ```
 
 ```text
-Epoch: [117]
-Acc@1 75.816 Acc@5 92.600
+Epoch: [117] Acc@1 75.816 Acc@5 92.600
 ```
 
 * Use RASampler (Multi-GPU)
