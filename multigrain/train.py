@@ -212,6 +212,9 @@ def load_data(traindir, valdir, args):
         train_sampler = RASampler(dataset, repetitions=args.ra_reps, shuffle=True, num_replicas=1, rank=0)
         # train_sampler = torch.utils.data.RandomSampler(dataset)
         test_sampler = torch.utils.data.SequentialSampler(dataset_test)
+    print('Sampler:')
+    print(train_sampler)
+    print(test_sampler)
 
     return dataset, dataset_test, train_sampler, test_sampler
 
@@ -269,7 +272,11 @@ def main(args):
 
     # criterion = nn.CrossEntropyLoss(label_smoothing=args.label_smoothing)
     print('Creating criterion')
-    criterion, retrieval_loss = build_criterion(args)
+    criterion, retrieval_loss, cross_entropy_loss = build_criterion(args)
+    print(criterion)
+    print(cross_entropy_loss)
+    print(retrieval_loss)
+
     criterion = criterion.to(device)
     retrieval_loss = retrieval_loss.to(device)
 
@@ -304,11 +311,17 @@ def main(args):
     # else:
     #     raise RuntimeError(f"Invalid optimizer {args.opt}. Only SGD, RMSprop and AdamW are supported.")
     classify_optimizer, retrieval_optimizer = build_optim(args, parameters, retrieval_loss)
+    print('Optimizer:')
+    print(classify_optimizer)
+    print(retrieval_optimizer)
 
     scaler = torch.cuda.amp.GradScaler() if args.amp else None
 
     classify_lr_scheduler = build_lr_scheduler(args, classify_optimizer)
     retrieval_lr_scheduler = build_lr_scheduler(args, retrieval_optimizer)
+    print('Lr_scheduler')
+    print(classify_lr_scheduler)
+    print(retrieval_lr_scheduler)
 
     model_without_ddp = model
     if args.distributed:

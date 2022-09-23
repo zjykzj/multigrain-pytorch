@@ -36,4 +36,4 @@ def build_criterion(args):
     multi_criterion = MultiCriterion(classify_loss=cross_entropy_loss, retrieval_loss=margin_loss,
                                      classify_weight=args.classify_weight)
 
-    return multi_criterion, margin_loss
+    return multi_criterion, margin_loss, cross_entropy_loss
