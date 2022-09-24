@@ -66,6 +66,10 @@ Epoch: [117] Acc@1 75.816 Acc@5 92.600
 torchrun --nproc_per_node=8 train.py --model resnet50 --lr 0.2 --data-path /data/imagenet/ --output-dir ./outputs --batch-size 256 --epochs 120 --classify-weight 0.5 --pooling-exponent 3 --ra-sampler --ra-reps 3 --amp --lr-warmup-epochs 5 --lr-warmup-method linear
 ```
 
+```text
+Epoch: [114] Acc@1 75.634 Acc@5 92.686
+```
+
 ## Maintainers
 
 * zhujian - *Initial work* - [zjykzj](https://github.com/zjykzj)
